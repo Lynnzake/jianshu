@@ -23,7 +23,7 @@ class JianshuSpiderSpider(CrawlSpider):
         print("文章所属专栏已获取")
         article_title=response.xpath('/html/body/div[1]/div[1]/div/div/section[1]/h1/text()').get()
         print("文章名字已获取",article_title)
-        article_id=response.xpath('?')[0]
+        article_id=response.url.split('?')[0]
         article_id=article_id.split('/')[-1]
         print("文章ID已获取",article_id)
         article_content=response.xpath('//*[@id="__next"]/div[1]/div/div/section[1]/article/text()').get()
