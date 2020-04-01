@@ -1,0 +1,36 @@
+# -*- coding: utf-8 -*-
+
+# Define here the models for your spider middleware
+#
+# See documentation in:
+# https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+
+from scrapy import signals
+from selenium import webdriver
+from scrapy.http.response.html import HtmlResponse
+import time
+class SeleniumDownloMiddleware(object):
+    def __init__(self):
+        chrome_options = webdriver.ChromeOptions()
+        # 代理IP
+        proxy = '60.17.254.157:21222'
+        # 设置代理
+        chrome_options.add_argument('--proxy-server=%s' % proxy)
+        # 注意options的参数用之前定义的chrome_options
+        self.driver=webdriver.Chrome(executable_path='C:\Program Files (x86)\Google\Chrome\Application\chromedriver.exe',options=chrome_options)
+    def process_request(self,request,spider):#通过chrome请求相关url
+        self.driver.get(request.url)
+        time.sleep(1)
+        try:
+            while True: 
+                showmore=self.driver.find_element_by_xpath('/html/body/div/div[1]/div/div[1]/section[3]/div[1]/div')
+                showmore.click()
+                time.sleep(1)
+                if not showmore:
+                    break
+        except:
+            pass
+        source=self.driver.page_source
+        response=HtmlResponse(url=self.driver.current_url,body=source,request=request,encoding='utf-8')#截获请求
+        return response
+    
