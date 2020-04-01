@@ -1,0 +1,49 @@
+# -*- coding: utf-8 -*-
+import scrapy
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
+from jianshu.items import JianshuItem
+
+class JianshuSpiderSpider(CrawlSpider):
+    name = 'jianshu_spider'
+    allowed_domains = ['jianshu.com']
+    start_urls = ['https://www.jianshu.com/']
+
+    rules = (
+        Rule(LinkExtractor(allow=r'.*/p/[a-z].*'), callback='parse_detail', follow=True),
+    )
+    def parse_detail(self, response):
+        print("="*30,response.url)
+        word_count=response.xpath('//*[@id="__next"]/div[1]/div/div/section[1]/div[1]/div/div/div[2]/span[2]/text()').get()
+        print("文章字数已获取",word_count)
+        read_count=response.xpath('//*[@id="__next"]/div[1]/div/div/section[1]/div[1]/div/div/div[2]/span[3]/text()').get()
+        print("文章阅读数已获取",read_count)
+        #mysql不支持列表，需将专栏名字转换为字符串
+        subjects=",".join(response.xpath('//*[@id="__next"]/div[1]/div/div[1]/section[3]/div[1]//span/text()').getall())
+        print("文章所属专栏已获取")
+        article_title=response.xpath('/html/body/div[1]/div[1]/div/div/section[1]/h1/text()').get()
+        print("文章名字已获取",article_title)
+        article_id=response.xpath('?')[0].split('/')[-1]
+        print("文章ID已获取",article_id)
+        article_content=response.xpath('//*[@id="__next"]/div[1]/div/div/section[1]/article/text()').get()
+        print("文章内容已获取",article_content)
+        article_author=response.xpath('//*[@id="__next"]/div[1]/div/div/section[1]/div[1]/div/div/div[1]/span/a/text()').get()
+        article_pubTime=response.xpath('//*[@id="__next"]/div[1]/div/div/section[1]/div[1]/div/div/div[2]/time/text()').get()
+        avatar=response.xpath('//*[@id="__next"]/div[1]/div/div/section[1]/div[1]/div/a/img/@src').get()
+        comment_count=response.xpath('//*[@id="note-page-comment"]/section/h3[2]/div[1]/span[2]/text()').get()
+        like_count=response.xpath('//*[@id="__next"]/div[1]/div/div[1]/section[1]/div[4]/div[1]/div[1]/span/text()').get()
+        item=JianshuItem(
+            article_title =article_title,
+        aricle_content = article_content,
+        article_id = article_id,
+        origin_url = response.url,
+        article_author = article_author,
+        article_avatar = avatar,
+        article_pubTime = article_pubTime,
+        subjects=subjects,
+        read_count=read_count,
+        word_count=word_count,
+        comment_count=comment_count,
+        like_count=like_count,
+        )
+        yield item
