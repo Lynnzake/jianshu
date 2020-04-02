@@ -13,7 +13,7 @@ class JianshuPipeline(object):
         dbparams={
             'host':'localhost',
             'user':'root',
-            'password':'qwezxc8520963',
+            'password':'XXXXX',
             'database':'jianshu',
             'charset':'utf8',
         }
