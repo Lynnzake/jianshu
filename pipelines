@@ -37,7 +37,7 @@ class JianShuTwistedPipeline(object):#数据异步插入数据库
         dbparams={
             'host':'localhost',
             'user':'root',
-            'password':'qwezxc8520963',
+            'password':'XXXXXX',
             'database':'jianshu',
             'charset':'utf8',
             'cursorclass':cursors.DictCursor
