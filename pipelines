@@ -1,63 +1,72 @@
-# -*- coding: utf-8 -*-
-
-# Define your item pipelines here
-#
-# Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-
 import pymysql
 from twisted.enterprise import adbapi#用来处理数据库相关
 from pymysql import cursors
-class JianshuPipeline(object):
-    def __init__(self):
-        dbparams={
-            'host':'localhost',
-            'user':'root',
-            'password':'XXXXX',
-            'database':'jianshu',
-            'charset':'utf8',
-        }
-        self.conn=pymysql.connect(**dbparams)#**将会把dbparams里的内容作为键值对传入
-        self.cursor=self.conn.cursor()#创建游标
-        self._sql=None
-    def process_item(self, item, spider):
-        self.cursor.execute(self.sql,(item['article_id'],item['article_title'],item['article_content'],item['article_author'],item['article_pubTime'],))
-        self.conn.commit()
-        return item
-    @property
-    def sql(self):
-        if not self._sql:
-            self._sql="""
-            insert into article(article_id,article_title,article_content,article_author,article_pubTime) values(null,%s,%s,%s,%s)
-            """
-            return self._sql
-        return self._sql
+# class JianshuPipeline(object):
+#     def __init__(self):
+#         dbparams={
+#             'host':'localhost',
+#             'user':'root',
+#             'password':'qwezxc8520963',
+#             'database':'jianshu',
+#             'charset':'utf8',
+#         }
+#         self.conn=pymysql.connect(**dbparams)#**将会把dbparams里的内容作为键值对传入
+#         self.cursor=self.conn.cursor()#创建游标
+#         self._sql=None
+#     def process_item(self, item, spider):
+#         self.cursor.execute(self.sql,(item['article_id'],item['article_title'],item['article_content'],item['article_author'],item['article_pubTime'],))
+#         self.conn.commit()
+#         return item
+#     @property
+#     def sql(self):
+#         if not self._sql:
+#             self._sql="""
+#             insert into article(article_id,article_title,article_content,article_author,article_pubTime) values(null,%s,%s,%s,%s)
+#             """
+#             return self._sql
+#         return self._sql
 class JianShuTwistedPipeline(object):#数据异步插入数据库
     def __init__(self):
         dbparams={
             'host':'localhost',
             'user':'root',
-            'password':'XXXXXX',
+            'password':'qwezxc8520963',
             'database':'jianshu',
             'charset':'utf8',
             'cursorclass':cursors.DictCursor
         }
         self.dbpool=adbapi.ConnectionPool('pymysql',**dbparams)#创建连接池
+        print("+"*20)
+        print("连接池已创建")
+        print("+"*20)
         self._sql=None
+        self.count=0
     @property
     def sql(self):
         if not self._sql:
             self._sql="""
-            insert into article(article_id,article_title,article_content,article_author,article_pubTime，word_count,read_count,subjects,origin_url,article_avatar,comment_count,like_count) values(null,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            insert into article(read_count,article_content,article_author,article_title,article_pubTime,article_id,subjects,
+            origin_url,article_avatar,word_count,comment_count,like_count) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """
             return self._sql
         return self._sql
     def process_item(self,item,spider):
         defer=self.dbpool.runInteraction(self.insert_item,item)#runInteraction()实现异步写入
+        print("+"*20)
+        print("调用Inset-Item")
+        self.count+=1
+        print("已写入"+str(self.count)+"篇文章")
+        print("+"*20)
         defer.addErrback(self.handle_error,item,spider)
+        return item
     def insert_item(self,cursor,item):
-        cursor.execute(self.sql,(item['article_id'],item['article_title'],item['article_content'],item['article_author'],item['article_pubTime'],item['word_count'],item['read_count'],item['subjects'],item['origin_url'],item['article_avatar'],item['comment_count'],item['like_count']))
+        cursor.execute(self.sql,(item['read_count'],item['article_content'],item['article_author'],item['article_title'],item['article_pubTime'],item['article_id'],item['subjects'],item['origin_url'],item['article_avatar'],item['word_count'],item['comment_count'],item['like_count']))
+        print("="*30)
+        print("已获取item并写入数据库")
+        print("="*30)
     def handle_error(self,error,item,spider):
         print("="*10+"error"+"="*10)
         print(error)
         print("="*10+"error"+"="*10)
+    def close_spider(self,spider):
+        pass
