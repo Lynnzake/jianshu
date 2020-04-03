@@ -11,7 +11,7 @@ import scrapy
 class JianshuItem(scrapy.Item):
     # define the fields for your item here like:
     article_title = scrapy.Field()
-    aricle_content = scrapy.Field()
+    article_content = scrapy.Field()
     article_id = scrapy.Field()
     origin_url = scrapy.Field()
     article_author = scrapy.Field()
